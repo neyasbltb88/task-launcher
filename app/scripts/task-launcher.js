@@ -7,9 +7,10 @@ export default class Launcher {
      *       condition:  @Function: должна проверять условие, необходимое для вызова callback и возвращать boolean.
      *       callback:   @Function: вызовется когда condition вернет true.
      *       arg:        @Any: один аргумент, который передастся в callback при его вызове. Необязательный.
+     *                   @Function: если передана функция, то все, что она вернет, будет передано в callback при его вызове.
      *       attempts:   @Number: количество попыток для проверки условия. Необязательный. 
      *                   Если не пердан, проверка будет бесконечной, пока condition не вернет true или не будет вызван метод остановки .stop()
-     *       run:        @Boolean: Если true, то запуск таска произойдет автоматически, без вызова .run()
+     *       run:        @Boolean: если true, то запуск таска произойдет автоматически, без вызова .run()
      *   } */
     constructor(props = {}) {
         this.condition = props.condition || true;

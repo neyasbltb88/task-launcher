@@ -1,0 +1,6 @@
+ftp_config.js
+/node_modules
+package-lock.json
+*.code-workspace
+/Заметки
+/.vscode

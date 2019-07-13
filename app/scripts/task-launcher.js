@@ -24,7 +24,7 @@ export default class Launcher {
         // Если функция условия вернула true, тормозим рекурсию и выззываем callback
         if (this.condition.call(this)) {
             this.stop();
-            this.callback(this.arg);
+            this.callback(typeof this.arg === 'function' ? this.arg.call(this) : this.arg);
 
             // Если функция условия вернула false, количество попыток не исчерпано и не остановлена рекурсия,
             // то увеличиваем счетчик попыток и планируем очередной запуск 

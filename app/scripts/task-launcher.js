@@ -9,7 +9,7 @@ export default class Launcher {
      *       arg:        @Any: один аргумент, который передастся в callback при его вызове. Необязательный.
      *       attempts:   @Number: количество попыток для проверки условия. Необязательный. 
      *                   Если не пердан, проверка будет бесконечной, пока condition не вернет true или не будет вызван метод остановки .stop()
-     *       run:    @Boolean: Если true, то запуск таска произойдет автоматически, без вызова .run()
+     *       run:        @Boolean: Если true, то запуск таска произойдет автоматически, без вызова .run()
      *   } */
     constructor(props = {}) {
         this.condition = props.condition || true;
@@ -24,7 +24,7 @@ export default class Launcher {
         // Если функция условия вернула true, тормозим рекурсию и выззываем callback
         if (this.condition.call(this)) {
             this.stop();
-            this.callback(typeof this.arg === 'function' ? this.arg.call(this) : this.arg);
+            this.callback.call(this, typeof this.arg === 'function' ? this.arg.call(this) : this.arg);
 
             // Если функция условия вернула false, количество попыток не исчерпано и не остановлена рекурсия,
             // то увеличиваем счетчик попыток и планируем очередной запуск 

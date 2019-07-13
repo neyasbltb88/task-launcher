@@ -4,3 +4,4 @@ package-lock.json
 *.code-workspace
 /Заметки
 /.vscode
+/build/scripts/maps

@@ -39,9 +39,10 @@ export default class Launcher {
             }
 
             // Подготовка таска
-            task.attempts = tasks.attempts || Infinity;
+            task.attempts = task.attempts || Infinity;
             task.tryNum = 0;
             task.run = task.run || false;
+            task.complete = null;
 
             // Добавление в общий массив тасков
             this.tasks.push(task);
@@ -77,12 +78,16 @@ export default class Launcher {
             if (task.condition.call(this)) {
                 this.stop(index);
 
-                task.callback.call(this, typeof task.arg === 'function' ? task.arg.call(this) : task.arg);
+                task.complete = true;
+                task.callback.call(this, typeof task.arg === 'function' ? task.arg.call(this, index) : task.arg);
 
                 // Если функция условия вернула false и количество попыток исчерпано, тормозим таск
             } else if (!task.condition.call(this)) {
                 task.tryNum++;
-                if (task.tryNum >= task.attempts) this.stop(index);
+                if (task.tryNum >= task.attempts) {
+                    this.stop(index);
+                    task.complete = false;
+                }
             }
         });
 
@@ -99,7 +104,7 @@ export default class Launcher {
 
     }
 
-    _findTask(taskId) {
+    findIndex(taskId) {
         let index;
         // Если число - то это индекс, и если под индексом есть таск
         if (typeof taskId === 'number' && this.tasks[taskId]) {
@@ -119,8 +124,15 @@ export default class Launcher {
         return index;
     }
 
+    getTask(taskId) {
+        let index = this.findIndex(taskId);
+        if (index === false) return false;
+
+        return this.tasks[index];
+    }
+
     _runTask = (taskId, arg) => {
-        let index = this._findTask(taskId);
+        let index = this.findIndex(taskId);
         if (index === false) return false;
 
         // Если нет аргумениа и таск уже запущен, возвращаем false
@@ -128,6 +140,8 @@ export default class Launcher {
 
         // Запускаем таск
         this.tasks[index].run = true;
+        // Отмечаем что таск не вполнен
+        this.tasks[index].complete = null;
         // Если есть аргумент, обновим его в таске
         if (arg) this.tasks[index].arg = arg;
 
@@ -142,10 +156,8 @@ export default class Launcher {
             runs = [];
 
             this.tasks.forEach((task, index) => {
-                if (task.run === false) {
-                    runs.push(index);
-                    task.run = true;
-                }
+                this._runTask(index);
+                runs.push(index);
             });
 
             // Если аргумент один, то это индекс или имя таска
@@ -164,13 +176,14 @@ export default class Launcher {
     }
 
     _stopTask(taskId) {
-        let index = this._findTask(taskId);
+        let index = this.findIndex(taskId);
         if (index === false) return false;
 
         if (!this.tasks[index].run) return false;
 
         this.tasks[index].run = false;
         this.tasks[index].tryNum = 0;
+        this.tasks[index].complete = false;
 
         return index;
     }
@@ -186,10 +199,8 @@ export default class Launcher {
         } else {
             stoped = [];
             this.tasks.forEach((task, idx) => {
-                let index = this._stopTask(idx);
-                if (index === false) return false;
-
-                stoped.push(index);
+                this._stopTask(idx);
+                stoped.push(idx);
             });
 
             this.running = false;
@@ -201,7 +212,7 @@ export default class Launcher {
     }
 
     _removeTask(taskId) {
-        let index = this._findTask(taskId);
+        let index = this.findIndex(taskId);
         if (index === false) return false;
 
         this.tasks.splice(index, 1);

@@ -19,7 +19,9 @@ export default class Launcher {
 
     add = (tasks) => {
         let newTasks = [];
+        let added = false;
         if (tasks instanceof Array) {
+            added = [];
             newTasks = tasks;
         } else if (tasks instanceof Object) {
             newTasks.push(tasks);
@@ -43,10 +45,19 @@ export default class Launcher {
 
             // Добавление в общий массив тасков
             this.tasks.push(task);
+            let addedIndex = this.tasks.length - 1;
+
+            if (added instanceof Array) {
+                added.push(addedIndex);
+            } else {
+                added = addedIndex;
+            }
         });
 
         // Попытка запуска тасков после добавления
-        this.rafId = requestAnimationFrame(this._launch);
+        this._launch();
+
+        return added;
     }
 
     hasActive = () => {
@@ -71,11 +82,7 @@ export default class Launcher {
                 // Если функция условия вернула false и количество попыток исчерпано, тормозим таск
             } else if (!task.condition.call(this)) {
                 task.tryNum++;
-
-                if (task.tryNum >= task.attempts) {
-                    this.stop(index);
-                }
-
+                if (task.tryNum >= task.attempts) this.stop(index);
             }
         });
 
@@ -103,6 +110,8 @@ export default class Launcher {
             this.tasks.forEach((task, ind) => {
                 if (task.name === taskId) index = ind;
             });
+
+            index = (index === undefined) ? false : index;
         } else {
             return false;
         }
@@ -149,7 +158,7 @@ export default class Launcher {
         }
 
         // Запуск выполнения проверки активных тасков
-        this.rafId = requestAnimationFrame(this._launch);
+        this._launch();
 
         return runs;
     }
@@ -157,6 +166,8 @@ export default class Launcher {
     _stopTask(taskId) {
         let index = this._findTask(taskId);
         if (index === false) return false;
+
+        if (!this.tasks[index].run) return false;
 
         this.tasks[index].run = false;
         this.tasks[index].tryNum = 0;
@@ -187,6 +198,34 @@ export default class Launcher {
         }
 
         return stoped;
+    }
+
+    _removeTask(taskId) {
+        let index = this._findTask(taskId);
+        if (index === false) return false;
+
+        this.tasks.splice(index, 1);
+
+        return index;
+    }
+
+    remove = (taskId) => {
+        let removed;
+        if (taskId !== undefined) {
+            let index = this._removeTask(taskId);
+            if (index === false) return false;
+
+            removed = index;
+        } else {
+            removed = [];
+            this.tasks.forEach((task, idx) => {
+                removed.push(idx);
+            });
+
+            this.tasks = [];
+        }
+
+        return removed;
     }
 }
 
